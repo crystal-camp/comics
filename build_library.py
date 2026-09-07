@@ -18,14 +18,35 @@ def esc(v):return html.escape(str(v or ''),quote=True)
 
 def make_share_page(item,site):
     slug=item['slug'];folder=COMICS/slug
-    site_url=(site.get('siteUrl') or '').rstrip('/')
-    canonical=(f'{site_url}/comics/{quote(slug)}/' if site_url else f'../../reader.html?comic={quote(slug)}')
-    image=(f'{site_url}/comics/{quote(slug)}/{quote(item["cover"])}' if site_url else quote(item['cover']))
-    reader=(f'{site_url}/reader.html?comic={quote(slug)}' if site_url else f'../../reader.html?comic={quote(slug)}')
-    page=f'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    site_url=(site.get('siteUrl') or 'https://crystal-camp.github.io/comics').rstrip('/')
+    canonical=f'{site_url}/comics/{quote(slug)}/'
+    image=f'{site_url}/comics/{quote(slug)}/{quote(item["cover"])}'
+    reader=f'{site_url}/reader.html?comic={quote(slug)}'
+    page=f'''<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(item['title'])} — {esc(site.get('siteName','Crystal Lake Comics'))}</title>
-<meta name="description" content="{esc(item['description'])}"><meta property="og:type" content="article"><meta property="og:site_name" content="{esc(site.get('siteName','Crystal Lake Comics'))}"><meta property="og:title" content="{esc(item['title'])}"><meta property="og:description" content="{esc(item['description'])}"><meta property="og:image" content="{esc(image)}"><meta property="og:url" content="{esc(canonical)}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{esc(item['title'])}"><meta name="twitter:description" content="{esc(item['description'])}"><meta name="twitter:image" content="{esc(image)}"><link rel="canonical" href="{esc(canonical)}">
-<script>location.replace({json.dumps(reader)});</script></head><body></body></html>'''
+<meta name="description" content="{esc(item['description'])}">
+<link rel="canonical" href="{esc(canonical)}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="{esc(site.get('siteName','Crystal Lake Comics'))}">
+<meta property="og:title" content="{esc(item['title'])}">
+<meta property="og:description" content="{esc(item['description'])}">
+<meta property="og:url" content="{esc(canonical)}">
+<meta property="og:image" content="{esc(image)}">
+<meta property="og:image:secure_url" content="{esc(image)}">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="1536">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{esc(item['title'])}">
+<meta name="twitter:description" content="{esc(item['description'])}">
+<meta name="twitter:image" content="{esc(image)}">
+<script>location.replace({json.dumps(reader)});</script>
+</head>
+<body><p><a href="{esc(reader)}">Ouvrir {esc(item['title'])}</a></p></body>
+</html>'''
     (folder/'index.html').write_text(page,encoding='utf-8')
 
 def main():

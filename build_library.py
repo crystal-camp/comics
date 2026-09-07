@@ -37,8 +37,10 @@ def make_discord_preview(item):
             with Image.open(folder / name) as im:
                 imgs.append(ImageOps.exif_transpose(im).convert('RGB'))
 
-        W, H = 1200, 630
-        gap = 14
+        # Format volontairement plus étroit : les deux pages 2:3 remplissent
+        # presque toute l'image, avec seulement une petite séparation centrale.
+        W, H = 900, 630
+        gap = 6
         panel_w = (W - gap) // 2
         canvas = Image.new('RGB', (W, H), (5, 12, 10))
 
@@ -79,7 +81,7 @@ def make_share_page(item,site):
 <meta property="og:url" content="{esc(canonical)}">
 <meta property="og:image" content="{esc(image)}">
 <meta property="og:image:secure_url" content="{esc(image)}">
-<meta property="og:image:width" content="1200">
+<meta property="og:image:width" content="900">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{esc(item['title'])}">

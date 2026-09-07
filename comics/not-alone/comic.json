@@ -1,0 +1,26 @@
+{
+  "title": "Not Alone",
+  "subtitle": "Quelqu'un est encore dans les bois",
+  "description": "Guidée par Garm au cœur de la forêt, Skaði fait une découverte qui transforme une simple sortie nocturne en course contre la montre. Tandis que Maxwell tente de maintenir Aglaé en vie, une présence rôde encore entre les arbres.",
+  "date": "2026-09-07",
+  "category": "feature",
+  "characters": [
+    "Skaði",
+    "Maxwell",
+    "Aglaé",
+    "June",
+    "Garm"
+  ],
+  "tags": [
+    "lisière",
+    "forêt",
+    "slasher",
+    "enquête",
+    "agression",
+    "911",
+    "police"
+  ],
+  "cover": "cover.png",
+  "theme": "forest",
+  "accent": "#b8493f"
+}

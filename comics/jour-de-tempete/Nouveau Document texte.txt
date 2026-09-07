@@ -1,0 +1,25 @@
+{
+  "title": "Jour de tempête",
+  "subtitle": "Les mésaventures de Stanley Oldfield",
+  "description": "Un arbre à déplacer, des enfants à secourir et un compteur à relancer. En pleine tempête, Stanley découvre qu'une bonne intention suffit parfois à provoquer beaucoup, beaucoup plus de problèmes.",
+  "date": "2026-08-22",
+  "category": "fast",
+  "characters": [
+    "Stanley",
+    "Callan",
+    "Roscoe",
+    "Skadi",
+    "Bryan",
+    "Steven"
+  ],
+  "tags": [
+    "Stanley",
+    "tempête",
+    "humour",
+    "camp",
+    "sauvetage"
+  ],
+  "cover": "cover.png",
+  "theme": "forest",
+  "accent": "#e0a928"
+}

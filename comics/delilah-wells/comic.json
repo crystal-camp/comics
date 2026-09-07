@@ -1,0 +1,24 @@
+{
+  "title": "Delilah Wells: Origin",
+  "subtitle": "Some homes are found, not given.",
+  "description": "Bien avant de devenir monitrice à Crystal Lake, Delilah Wells n'était qu'une enfant de onze ans découvrant une mutation aussi magnifique qu'effrayante aux yeux des autres. Abandonnée par sa famille et envoyée loin de chez elle, elle trouvera peu à peu à Crystal Lake ce qu'elle pensait avoir perdu pour toujours.",
+  "date": "2026-09-07",
+  "category": "origins",
+  "characters": [
+    "Delilah Wells",
+    "Kitty Pryde",
+    "Charles Xavier"
+  ],
+  "tags": [
+    "origin",
+    "passé",
+    "enfance",
+    "aurore",
+    "mutation",
+    "Crystal Lake",
+    "famille"
+  ],
+  "cover": "cover.png",
+  "theme": "lake",
+  "accent": "#8fbfc1"
+}

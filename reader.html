@@ -189,7 +189,31 @@ function finishZoomDrag(){
 zoomView.addEventListener('pointerdown',e=>{if(!isZoomed())return;e.preventDefault();zoomDrag={x:e.clientX,y:e.clientY,px:zoomPan.x,py:zoomPan.y};zoomView.classList.add('dragging');zoomView.setPointerCapture(e.pointerId)});zoomView.addEventListener('pointermove',e=>{if(!zoomDrag)return;zoomPan.x=zoomDrag.px+e.clientX-zoomDrag.x;zoomPan.y=zoomDrag.py+e.clientY-zoomDrag.y;applyZoomTransform()});zoomView.addEventListener('pointerup',finishZoomDrag);zoomView.addEventListener('pointercancel',finishZoomDrag);zoomView.addEventListener('lostpointercapture',finishZoomDrag);
 function handleDblClick(e){if(e.target.closest?.('.thumbs-panel'))return;zoomTo(zoom<1.5?2:1,{x:e.clientX,y:e.clientY})}
 stage.addEventListener('dblclick',handleDblClick);
-window.addEventListener('keydown',e=>{if(e.target.matches('input,textarea,select'))return;if(e.key==='ArrowRight'){e.preventDefault();flip(1)}else if(e.key==='ArrowLeft'){e.preventDefault();flip(-1)}else if(e.key==='+'||e.key==='='){e.preventDefault();zoomTo(zoom+.25)}else if(e.key==='-'){e.preventDefault();zoomTo(zoom-.25)}else if(e.key==='0'){e.preventDefault();resetZoom()}else if(e.key.toLowerCase()==='f'){e.preventDefault();toggleFullscreen()}else if(e.key==='Escape'){if($('thumbsPanel').classList.contains('open'))closeThumbs();$('settings').classList.remove('open');showUI(true)}});
+window.addEventListener('keydown',e=>{
+  if(e.target.matches('input,textarea,select'))return;
+
+  // Les flèches sont gérées exclusivement par Crystal Lake Comics.
+  // Capture + stopImmediatePropagation empêche ZineJS de traiter le même
+  // appui une seconde fois en mode Papier/Souple.
+  if(e.key==='ArrowRight'||e.key==='ArrowLeft'){
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    if(e.repeat)return;
+    flip(e.key==='ArrowRight'?1:-1);
+    return;
+  }
+
+  if(e.key==='+'||e.key==='='){e.preventDefault();zoomTo(zoom+.25)}
+  else if(e.key==='-'){e.preventDefault();zoomTo(zoom-.25)}
+  else if(e.key==='0'){e.preventDefault();resetZoom()}
+  else if(e.key.toLowerCase()==='f'){e.preventDefault();toggleFullscreen()}
+  else if(e.key==='Escape'){
+    if($('thumbsPanel').classList.contains('open'))closeThumbs();
+    $('settings').classList.remove('open');
+    showUI(true)
+  }
+},true);
 
 window.addEventListener('resize',()=>{if(isZoomed())resetZoom();layoutBook();zine?.update?.();if(behavior==='rigid'&&zoom===1)renderRigid()});document.addEventListener('fullscreenchange',()=>setTimeout(()=>zine?.update?.(),80));document.addEventListener('mousemove',()=>showUI());document.addEventListener('touchstart',()=>showUI(),{passive:true});
 async function boot(){try{if(!slug)throw Error('Aucun comic indiqué dans l’adresse.');const data=await fetch('library.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('library.json introuvable');return r.json()});comic=(data.comics||[]).find(c=>c.slug===slug);if(!comic)throw Error('Ce comic n’existe pas dans library.json.');$('title').textContent=comic.title;updateTheme();allPages=[comic.cover,...comic.pages,...(comic.backCover?[comic.backCover]:[])].filter(Boolean);await analyzePageFormats();layoutBook();const s=loadSaved();behavior=['soft','paper','rigid'].includes(s.behavior)?s.behavior:'paper';current=resume&&Number.isFinite(Number(s.page))?clamp(Number(s.page),0,allPages.length-1):0;document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===behavior));app.classList.toggle('rigid',behavior==='rigid');renderThumbs();preloadAround(current);if(behavior==='rigid')renderRigid();else await mountZine(current);$('loading').style.display='none';showUI(true)}catch(err){console.error(err);$('loading').style.display='none';$('fatalText').textContent=err.message||String(err);$('fatal').classList.add('show')}}boot();

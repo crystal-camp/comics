@@ -17,7 +17,7 @@ def pretty_slug(slug):return re.sub(r'[-_]+',' ',slug).strip().title()
 def esc(v):return html.escape(str(v or ''),quote=True)
 
 def make_share_page(item,site):
-    slug=item['slug'];folder=COMICS/slug
+    slug=item['slug']; folder=COMICS/slug
     site_url=(site.get('siteUrl') or 'https://crystal-camp.github.io/comics').rstrip('/')
     canonical=f'{site_url}/comics/{quote(slug)}/'
     image=f'{site_url}/comics/{quote(slug)}/{quote(item["cover"])}'
@@ -37,8 +37,6 @@ def make_share_page(item,site):
 <meta property="og:url" content="{esc(canonical)}">
 <meta property="og:image" content="{esc(image)}">
 <meta property="og:image:secure_url" content="{esc(image)}">
-<meta property="og:image:width" content="1024">
-<meta property="og:image:height" content="1536">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{esc(item['title'])}">
 <meta name="twitter:description" content="{esc(item['description'])}">

@@ -21,6 +21,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+      - run: python -m pip install --upgrade pillow
       - run: python build_library.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

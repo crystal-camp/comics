@@ -1,0 +1,34 @@
+{
+  "site": {
+    "siteName": "Crystal Lake Comics",
+    "siteUrl": "",
+    "defaultDescription": "Les histoires et résumés RP de Crystal Lake, racontés en comics."
+  },
+  "comics": [
+    {
+      "slug": "demo-lisiere",
+      "title": "La Lisière",
+      "subtitle": "Une histoire de Crystal Lake",
+      "description": "À la tombée de la nuit, une découverte près de la lisière transforme une simple soirée au camp en début d'enquête.",
+      "date": "2026-08-23",
+      "category": "stories",
+      "characters": [],
+      "tags": [],
+      "cover": "1.png",
+      "backCover": null,
+      "pages": [
+        "2.png",
+        "3.png",
+        "4.png",
+        "5.png",
+        "6.png",
+        "7.png",
+        "8.png",
+        "9.png"
+      ],
+      "pageCount": 9,
+      "accent": "#b8493f",
+      "theme": "lake"
+    }
+  ]
+}

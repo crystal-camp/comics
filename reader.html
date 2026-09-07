@@ -37,8 +37,27 @@ const clamp=(n,a,b)=>Math.max(a,Math.min(b,n)), pad=n=>String(n).padStart(2,'0')
 const configs={soft:{curl:'cone',flipDuration:980},paper:{curl:'cone',flipDuration:720},rigid:{}};
 function pageUrl(name){return `comics/${encodeURIComponent(slug)}/${encodeURIComponent(name)}`}
 function loadImageMeta(name){return new Promise(resolve=>{const img=new Image();img.onload=()=>resolve({w:img.naturalWidth||1,h:img.naturalHeight||1,ratio:(img.naturalWidth||1)/(img.naturalHeight||1)});img.onerror=()=>resolve({w:2,h:3,ratio:2/3});img.src=pageUrl(name)})}
-async function analyzePageFormats(){pageMeta=await Promise.all(allPages.map(loadImageMeta));const interior=(comic.pages||[]).map(n=>{const i=allPages.indexOf(n);return i>=0?pageMeta[i]?.ratio:null}).filter(r=>Number.isFinite(r)&&r>0);const candidates=interior.length?interior:pageMeta.map(m=>m.ratio).filter(r=>Number.isFinite(r)&&r>0);if(candidates.length){const sorted=[...candidates].sort((a,b)=>a-b);physicalPageRatio=sorted[Math.floor(sorted.length/2)]}document.documentElement.style.setProperty('--page-ratio',String(physicalPageRatio))}
-function metaRatio(i){return pageMeta[i]?.ratio||physicalPageRatio||2/3}
+async function analyzePageFormats(){
+  // Ne charge plus toutes les pages au démarrage.
+  // Une page intérieure suffit pour déterminer le format principal du comic.
+  pageMeta=new Array(allPages.length);
+  const sampleName=(comic.pages&&comic.pages[0])||comic.cover||allPages[0];
+  const sampleIndex=Math.max(0,allPages.indexOf(sampleName));
+  if(sampleName){
+    const meta=await loadImageMeta(sampleName);
+    pageMeta[sampleIndex]=meta;
+    if(Number.isFinite(meta.ratio)&&meta.ratio>0)physicalPageRatio=meta.ratio;
+  }
+  document.documentElement.style.setProperty('--page-ratio',String(physicalPageRatio));
+}
+function ensurePageMeta(i){
+  if(i<0||i>=allPages.length||pageMeta[i])return;
+  loadImageMeta(allPages[i]).then(meta=>{
+    pageMeta[i]=meta;
+    // On ne relayout pas le livre entier : le ratio principal reste stable.
+  });
+}
+function metaRatio(i){ensurePageMeta(i);return pageMeta[i]?.ratio||physicalPageRatio||2/3}
 function spreadRatios(indices){return indices.map(metaRatio)}
 function fitSpreadBox(indices,rect){const ratios=spreadRatios(indices),sum=ratios.reduce((a,b)=>a+b,0)||physicalPageRatio;const h=Math.min(rect.height,rect.width/sum),w=h*sum;return{w,h,ratios}}
 function layoutBook(){if(!comic)return;const r=stage.getBoundingClientRect();if(!r.width||!r.height)return;const singlePreferred=r.width/r.height<physicalPageRatio*1.55;const spreadRatio=physicalPageRatio*(singlePreferred?1:2);const h=Math.min(r.height,r.width/spreadRatio),w=h*spreadRatio;bookEl.style.width=Math.max(1,w)+'px';bookEl.style.height=Math.max(1,h)+'px'}
@@ -68,14 +87,27 @@ function updateUI(){
   document.title=`${comic?.title||'Comic'} — Crystal Lake Comics`;
   save();highlightThumb();preloadAround(p)
 }
-function preloadAround(p){for(let i=Math.max(0,p-1);i<=Math.min(allPages.length-1,p+4);i++){const img=new Image();img.decoding='async';img.src=pageUrl(allPages[i]);if(i<=p+2)img.decode?.().catch(()=>{})}}
+function preloadAround(p){
+  const visible=visibleSpreadPages(p);
+  const last=visible[visible.length-1]??p;
+  const targets=new Set([...visible]);
+  if(last+1<allPages.length)targets.add(last+1);
+  if(last+2<allPages.length)targets.add(last+2);
+  targets.forEach(i=>{
+    ensurePageMeta(i);
+    const img=new Image();
+    img.decoding='async';
+    img.src=pageUrl(allPages[i]);
+    if(i<=last+1)img.decode?.().catch(()=>{});
+  });
+}
 function highlightThumb(){const visible=new Set(visibleSpreadPages(current));document.querySelectorAll('.thumb').forEach((e,i)=>e.classList.toggle('active',visible.has(i)))}
 function renderThumbs(){const g=$('thumbsGrid');g.innerHTML=allPages.map((n,i)=>`<button class="thumb" data-page="${i}"><img loading="lazy" decoding="async" src="${pageUrl(n)}" alt="Page ${i+1}" style="aspect-ratio:${metaRatio(i)}"><span>${pad(i+1)}</span></button>`).join('');g.onclick=e=>{const b=e.target.closest('.thumb');if(!b)return;goTo(Number(b.dataset.page));closeThumbs()}}
 function naturalSpreadStart(page){if(page<=0)return 0;return page%2===1?page:page-1}
 function rigidSpreadPages(page){if(page<=0)return[0];const s=naturalSpreadStart(page);return[s,...(s+1<allPages.length?[s+1]:[])]}
 function renderRigid(){if(!allPages.length)return;const pages=rigidSpreadPages(current);current=pages[0];rigidSpread.className='rigid-spread '+(pages.length===1?'single':'');const r=stage.getBoundingClientRect(),box=fitSpreadBox(pages,r);rigidSpread.style.width=box.w+'px';rigidSpread.style.height=box.h+'px';rigidSpread.innerHTML=pages.map((i,k)=>`<img class="rigid-page" draggable="false" src="${pageUrl(allPages[i])}" alt="Page ${i+1}" style="width:${box.h*box.ratios[k]}px;height:${box.h}px">`).join('');rigidPan={x:0,y:0};zoom=1;applyRigidTransform();updateUI()}
 function applyRigidTransform(){rigidSpread.style.transform=`translate(${rigidPan.x}px,${rigidPan.y}px) scale(${zoom})`}
-async function mountZine(start=current){if(!window.ZineJS?.Zine)throw Error('Le moteur de feuilletage ne s’est pas chargé. Vérifie ta connexion Internet.');const old=zine;zine=null;try{old?.destroy()}catch{}bookEl.replaceChildren();const {Zine,ImageSource}=window.ZineJS;const c=configs[behavior];const srcPages=comic.pages.map(pageUrl);layoutBook();zine=new Zine(bookEl,{source:new ImageSource(srcPages),frontCover:comic.cover?pageUrl(comic.cover):undefined,backCover:comic.backCover?pageUrl(comic.backCover):undefined,spreadMode:comic.backCover?'book':'cover',renderer:'auto',curl:c.curl,flipDuration:c.flipDuration,clickToFlip:'off',zoom:{enabled:false,max:1,wheel:false,doubleClick:false,doubleClickInFlipZone:false},controls:false,loading:false,deepLink:false,responsiveSpread:true,startPage:clamp(start,0,allPages.length-1)});await zine.ready;layoutBook();zine.update?.();zine.on('pageChanged',e=>{current=Number(e.page)||0;zoom=1;updateUI()});zine.on('flipEnd',()=>{resetZoom();updateUI()});zine.on('sourceError',({index})=>toast(`PAGE ${index+1} : ERREUR`));zine.on('rendererFallback',()=>toast('MODE COMPATIBILITÉ'));current=clamp(start,0,allPages.length-1);zoom=1;updateUI();bookEl.focus();setTimeout(()=>zine?.update?.(),50)}
+async function mountZine(start=current){if(!window.ZineJS?.Zine)throw Error('Le moteur de feuilletage ne s’est pas chargé. Vérifie ta connexion Internet.');const old=zine;zine=null;try{old?.destroy()}catch{}bookEl.replaceChildren();const {Zine,ImageSource}=window.ZineJS;const c=configs[behavior];const srcPages=comic.pages.map(pageUrl);layoutBook();zine=new Zine(bookEl,{source:new ImageSource(srcPages,{preload:1,fit:'contain'}),frontCover:comic.cover?pageUrl(comic.cover):undefined,backCover:comic.backCover?pageUrl(comic.backCover):undefined,spreadMode:comic.backCover?'book':'cover',renderer:'auto',curl:c.curl,flipDuration:c.flipDuration,clickToFlip:'off',zoom:{enabled:false,max:1,wheel:false,doubleClick:false,doubleClickInFlipZone:false},controls:false,loading:false,deepLink:false,responsiveSpread:true,startPage:clamp(start,0,allPages.length-1)});await zine.ready;layoutBook();zine.update?.();zine.on('pageChanged',e=>{current=Number(e.page)||0;zoom=1;updateUI()});zine.on('flipEnd',()=>{resetZoom();updateUI()});zine.on('sourceError',({index})=>toast(`PAGE ${index+1} : ERREUR`));zine.on('rendererFallback',()=>toast('MODE COMPATIBILITÉ'));current=clamp(start,0,allPages.length-1);zoom=1;updateUI();bookEl.focus();setTimeout(()=>zine?.update?.(),50)}
 async function setBehavior(mode){if(!configs[mode]||switching)return;switching=true;resetZoom();behavior=mode;document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));app.classList.toggle('rigid',mode==='rigid');if(mode==='rigid'){try{zine?.destroy()}catch{}zine=null;renderRigid()}else{await mountZine(current)}switching=false;showUI(true)}
 function flip(dir){if(!comic)return;if(isZoomed())resetZoom();if(behavior==='rigid'){const pages=rigidSpreadPages(current);if(dir>0){const n=pages[pages.length-1]+1;if(n<allPages.length){current=n;renderRigid()}}else{if(current<=0)return;if(current<=2)current=0;else current=Math.max(1,naturalSpreadStart(current)-2);renderRigid()}return}if(dir>0)zine?.flipNext();else zine?.flipPrev()}
 function goTo(page){page=clamp(page,0,allPages.length-1);resetZoom();if(behavior==='rigid'){current=page;renderRigid()}else{zine?.flipTo(page)}}

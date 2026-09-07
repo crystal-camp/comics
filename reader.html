@@ -102,7 +102,15 @@ function preloadAround(p){
   });
 }
 function highlightThumb(){const visible=new Set(visibleSpreadPages(current));document.querySelectorAll('.thumb').forEach((e,i)=>e.classList.toggle('active',visible.has(i)))}
-function renderThumbs(){const g=$('thumbsGrid');g.innerHTML=allPages.map((n,i)=>`<button class="thumb" data-page="${i}"><img loading="lazy" decoding="async" src="${pageUrl(n)}" alt="Page ${i+1}" style="aspect-ratio:${metaRatio(i)}"><span>${pad(i+1)}</span></button>`).join('');g.onclick=e=>{const b=e.target.closest('.thumb');if(!b)return;goTo(Number(b.dataset.page));closeThumbs()}}
+function renderThumbs(){
+  const g=$('thumbsGrid');
+  // IMPORTANT : ne jamais appeler metaRatio(i) ici.
+  // metaRatio déclenche le chargement de l'image pour connaître ses dimensions,
+  // ce qui faisait charger TOUT le comic dès l'ouverture.
+  const thumbRatio=physicalPageRatio||2/3;
+  g.innerHTML=allPages.map((n,i)=>`<button class="thumb" data-page="${i}"><img loading="lazy" decoding="async" src="${pageUrl(n)}" alt="Page ${i+1}" style="aspect-ratio:${thumbRatio}"><span>${pad(i+1)}</span></button>`).join('');
+  g.onclick=e=>{const b=e.target.closest('.thumb');if(!b)return;goTo(Number(b.dataset.page));closeThumbs()}
+}
 function naturalSpreadStart(page){if(page<=0)return 0;return page%2===1?page:page-1}
 function rigidSpreadPages(page){if(page<=0)return[0];const s=naturalSpreadStart(page);return[s,...(s+1<allPages.length?[s+1]:[])]}
 function renderRigid(){if(!allPages.length)return;const pages=rigidSpreadPages(current);current=pages[0];rigidSpread.className='rigid-spread '+(pages.length===1?'single':'');const r=stage.getBoundingClientRect(),box=fitSpreadBox(pages,r);rigidSpread.style.width=box.w+'px';rigidSpread.style.height=box.h+'px';rigidSpread.innerHTML=pages.map((i,k)=>`<img class="rigid-page" draggable="false" src="${pageUrl(allPages[i])}" alt="Page ${i+1}" style="width:${box.h*box.ratios[k]}px;height:${box.h}px">`).join('');rigidPan={x:0,y:0};zoom=1;applyRigidTransform();updateUI()}

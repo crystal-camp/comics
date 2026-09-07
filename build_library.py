@@ -41,16 +41,28 @@ def make_discord_preview(item):
         # presque toute l'image, avec seulement une petite séparation centrale.
         W, H = 900, 630
         gap = 6
-        panel_w = (W - gap) // 2
         canvas = Image.new('RGB', (W, H), (5, 12, 10))
 
-        for i, im in enumerate(imgs):
-            # "contain" : aucune partie du comic n'est coupée.
-            fitted = ImageOps.contain(im, (panel_w, H), Image.Resampling.LANCZOS)
-            x0 = i * (panel_w + gap)
-            x = x0 + (panel_w - fitted.width) // 2
-            y = (H - fitted.height) // 2
+        # On donne d'abord la même hauteur maximale aux deux images.
+        # Elles sont ensuite collées l'une à l'autre avec seulement `gap`
+        # pixels entre elles, puis le duo entier est centré dans le canvas.
+        ratios = [im.width / max(1, im.height) for im in imgs]
+        widths = [r * H for r in ratios]
+        total_w = sum(widths) + gap
+
+        # Si un format très large dépasse le canvas, on réduit les deux
+        # images ensemble afin de préserver leurs proportions.
+        scale = min(1.0, W / total_w)
+        target_h = max(1, round(H * scale))
+        target_widths = [max(1, round(r * target_h)) for r in ratios]
+        total_w = sum(target_widths) + gap
+
+        x = (W - total_w) // 2
+        for im, target_w in zip(imgs, target_widths):
+            fitted = im.resize((target_w, target_h), Image.Resampling.LANCZOS)
+            y = (H - target_h) // 2
             canvas.paste(fitted, (x, y))
+            x += target_w + gap
 
         canvas.save(out, 'JPEG', quality=94, subsampling=0, optimize=True)
         return out.name

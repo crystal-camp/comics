@@ -105,19 +105,55 @@ def make_share_page(item,site):
 </html>'''
     (folder/'index.html').write_text(page,encoding='utf-8')
 
+
+def is_generated_or_auxiliary_image(name):
+    stem = Path(name).stem.lower()
+    # Fichiers créés par le site ou généralement utilisés comme visuels annexes.
+    return (
+        stem.startswith('discord-preview')
+        or stem.startswith('social-preview')
+        or stem.startswith('og-preview')
+        or stem.startswith('share-preview')
+        or stem.startswith('thumbnail')
+        or stem.startswith('thumb-')
+    )
+
+def is_numbered_page(name):
+    stem = Path(name).stem.lower().strip()
+    # Formats acceptés : 1, 01, 001, page1, page-01, page_001, p01, p-01...
+    return bool(re.fullmatch(r'(?:page|p)?[-_ ]?\d+', stem))
+
 def main():
     COMICS.mkdir(exist_ok=True);site=load_json(ROOT/'site.config.json',{});items=[]
     for folder in sorted([p for p in COMICS.iterdir() if p.is_dir()],key=lambda p:natural_key(p.name)):
         meta=load_json(folder/'comic.json',{})
-        images=sorted([p.name for p in folder.iterdir() if p.is_file() and p.suffix.lower() in IMG_EXT and p.name != 'discord-preview.jpg'],key=natural_key)
+        images=sorted([
+            p.name for p in folder.iterdir()
+            if p.is_file()
+            and p.suffix.lower() in IMG_EXT
+            and not is_generated_or_auxiliary_image(p.name)
+        ], key=natural_key)
         if not images: continue
+
         cover=meta.get('cover')
         if cover not in images:
             candidates=[n for n in images if Path(n).stem.lower() in {'cover','couverture','front','00','000'}]
             cover=candidates[0] if candidates else images[0]
+
         back=meta.get('backCover')
         excluded={cover,back}
-        pages=[n for n in images if n not in excluded]
+
+        # Si "pages" est renseigné dans comic.json, cette liste est la vérité absolue.
+        explicit_pages=meta.get('pages')
+        if isinstance(explicit_pages,list) and explicit_pages:
+            pages=[n for n in explicit_pages if isinstance(n,str) and n in images and n not in excluded]
+        else:
+            remaining=[n for n in images if n not in excluded]
+            numbered=[n for n in remaining if is_numbered_page(n)]
+            # Convention normale du projet : pages numérotées.
+            # Fallback pour ne pas casser un ancien comic aux noms libres :
+            # si aucune page n'est numérotée, on conserve les images restantes.
+            pages=numbered if numbered else remaining
         theme=meta.get('theme','lake')
         if theme not in {'lake','forest','night','paper','blood'}: theme='lake'
         item={'slug':folder.name,'title':meta.get('title') or pretty_slug(folder.name),'subtitle':meta.get('subtitle','Une histoire de Crystal Lake'),'description':meta.get('description') or site.get('defaultDescription','Une histoire de Crystal Lake.'),'date':meta.get('date',''),'category':meta.get('category','stories'),'characters':meta.get('characters',[]),'tags':meta.get('tags',[]),'cover':cover,'backCover':back if back in images else None,'pages':pages,'pageCount':len(pages)+1+(1 if back in images else 0),'accent':meta.get('accent','#b8493f'),'theme':theme}

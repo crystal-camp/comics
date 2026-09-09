@@ -1,0 +1,26 @@
+{
+  "title": "Kamiko Yoshida",
+  "subtitle": "Born to Stick Around",
+  "description": "De l'Institut Xavier à Crystal Lake, découvrez comment Kamiko Yoshida a appris à maîtriser une mutation aussi improbable que redoutable.",
+  "date": "2026-09-09",
+  "category": "origins",
+  "characters": [
+    "Kamiko Yoshida",
+    "Sunfire",
+    "Charles Xavier",
+    "Scott Summers",
+    "Alli"
+  ],
+  "tags": [
+    "origine",
+    "Kamiko",
+    "chewing-gum",
+    "Institut Xavier",
+    "Crystal Lake",
+    "mutation",
+    "Club secret"
+  ],
+  "cover": "cover.png",
+  "theme": "bubblegum",
+  "accent": "#ff4fa3"
+}

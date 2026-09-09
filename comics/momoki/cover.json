@@ -1,0 +1,23 @@
+{
+  "title": "MOMOKI",
+  "subtitle": "Jésus du hacking",
+  "description": "Quand la tempête coupe Crystal Lake du reste du monde, une hackeuse aussi brillante qu'insupportable transforme le commissariat en terrain de jeu.",
+  "date": "2026-09-09",
+  "category": "stories",
+  "characters": [
+    "Yokai",
+    "Phil",
+    "Tillman"
+  ],
+  "tags": [
+    "hacking",
+    "Momoki",
+    "commissariat",
+    "tempête",
+    "Crystal Lake",
+    "communications"
+  ],
+  "cover": "cover.png",
+  "theme": "night",
+  "accent": "#ff2b9d"
+}
